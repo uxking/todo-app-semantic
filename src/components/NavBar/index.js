@@ -5,10 +5,12 @@ import NavBar from "./NavBar";
 
 export default props => (
   <MainContext.Consumer>
-    {({ handleMenuItemClick }) => (
+    {({ loggedIn, handleMenuItemClick, handleLogOut }) => (
       <NavBar
         {...props}
+        loggedIn={loggedIn}
         handleMenuItemClick={handleMenuItemClick}
+        handleLogOut={handleLogOut}
       />
     )}
   </MainContext.Consumer>

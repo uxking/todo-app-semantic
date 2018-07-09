@@ -12,6 +12,7 @@ export class MainProvider extends React.Component {
     email: ""
   };
 
+  /* send the following functions to the Provider so others modules can use them */
   handleMenuItemClick = (e, { name }) => {
     this.setState({ activeMenuItem: name });
     console.log("ActiveMenuItem is: " + name);
@@ -29,19 +30,29 @@ export class MainProvider extends React.Component {
   };
 
   handleLoginClose = () => {
-    this.setState({ loginModal: false });
-    console.log("I'm the handleLoginClose");
+    this.setState({
+      loginModal: false
+    });
   };
 
   handleSignUpClose = () => {
-    this.setState({ signUpModal: false });
+    this.setState({
+      signUpModal: false
+    });
   };
 
   handleValidLogin = () => {
     this.setState({
-      loggedIn : true
-    })
+      loggedIn: true
+    });
   };
+
+  handleLogOut = () => {
+    this.setState({
+      loggedIn: false
+    });
+  };
+  /* end of functions to send to Provider */
 
   render() {
     return (
@@ -51,7 +62,8 @@ export class MainProvider extends React.Component {
           handleMenuItemClick: this.handleMenuItemClick,
           handleLoginClose: this.handleLoginClose,
           handleSignUpClose: this.handleSignUpClose,
-          handleValidLogin: this.handleValidLogin
+          handleValidLogin: this.handleValidLogin,
+          handleLogOut: this.handleLogOut
         }}
       >
         {this.props.children}

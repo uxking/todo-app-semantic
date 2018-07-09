@@ -1,14 +1,14 @@
 import React from "react";
 import { Button, Modal, Segment, Form, Message } from "semantic-ui-react";
 
-const userData = require("../Data/data.json");
+import fire from "firebase";
 
 export default class LoginForm extends React.Component {
   state = {
-    username: "",
     email: "",
     password: "",
-    warning: false
+    warning: false,
+    loading: false
   };
 
   handleChange = e => {
@@ -20,25 +20,51 @@ export default class LoginForm extends React.Component {
   };
 
   handleSubmit = e => {
-    console.log(userData);
-    if (
-      e.target.email.value === userData.email &&
-      e.target.password.value === userData.password
-    ) {
-      this.props.handleValidLogin(); // call from props to close the Login modal
-      this.setState({ warning: false }); // valid login should reset form's warning=false
-      this.props.handleLoginClose(); //call from props to close the Login modal
-    } else {
-      this.setState({
-        warning: true
+    e.preventDefault();
+
+    // start showing the loading animation while we use firebase
+    this.setState({
+      loading: true
+    });
+
+    fire
+      .auth()
+      .signInWithEmailAndPassword(this.state.email, this.state.password)
+      .then(user => {
+        console.log(user);
+        this.props.handleValidLogin();
+        // set the warning message to false for the next loginButton push
+        this.setState({
+          warning: false
+        });
+        this.props.handleLoginClose();
+        // once we close, set the loading to false for the next loginButton push
+        this.setState({
+          loading: false
+        });
+      })
+      .catch(error => {
+        this.setState({
+          warning: true,
+          loading: false
+        });
       });
-    }
   };
+
+  authListener = () => {
+    fire.auth().onAuthStateChanged(user => {
+      user && this.props.handleValidLogin();
+    });
+  };
+
+  componentDidMount() {
+    this.authListener();
+  }
 
   render() {
     const { loginModal, handleLoginClose } = this.props;
 
-    const { email, password, warning } = this.state;
+    const { email, password, warning, loading } = this.state;
 
     return (
       <Modal
@@ -49,7 +75,12 @@ export default class LoginForm extends React.Component {
       >
         <Modal.Header>Login to React Task List</Modal.Header>
         <Modal.Content>
-          <Form size="large" warning={warning} onSubmit={this.handleSubmit}>
+          <Form
+            size="large"
+            warning={warning}
+            loading={loading}
+            onSubmit={e => this.handleSubmit(e)}
+          >
             <Segment stacked>
               <Form.Input
                 fluid

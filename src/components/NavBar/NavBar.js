@@ -1,9 +1,15 @@
 import React from "react";
 import { Button, Container, Segment, Grid, Header } from "semantic-ui-react";
+import fire from "firebase";
 
 export default class NavBar extends React.Component {
+  hanldeLogout = () => {
+    fire.auth().signOut();
+    this.props.handleLogOut(); // get from props since we aren't in render yet.
+  };
+
   render() {
-    const { handleMenuItemClick } = this.props;
+    const { loggedIn, handleMenuItemClick } = this.props;
 
     return (
       <Container>
@@ -26,9 +32,15 @@ export default class NavBar extends React.Component {
             </Grid.Column>
             <Grid.Column>
               <Segment vertical textAlign="right">
-                <Button name="loginButton" onClick={handleMenuItemClick}>
-                  Login
-                </Button>
+                {!loggedIn ? (
+                  <Button name="loginButton" onClick={handleMenuItemClick}>
+                    Login
+                  </Button>
+                ) : (
+                  <Button name="logOutButton" onClick={this.hanldeLogout}>
+                    Log Out
+                  </Button>
+                )}
                 <Button
                   name="signUpButton"
                   primary
