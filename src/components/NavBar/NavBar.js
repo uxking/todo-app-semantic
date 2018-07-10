@@ -13,7 +13,7 @@ export default class NavBar extends React.Component {
 
     return (
       <Container>
-        <Grid divided="vertically" columns={3}>
+        <Grid divided="vertically" columns={3} container>
           <Grid.Row>
             <Grid.Column>
               <Segment vertical>
@@ -25,7 +25,7 @@ export default class NavBar extends React.Component {
                 />
               </Segment>
             </Grid.Column>
-            <Grid.Column verticalAlign="bottom">
+            <Grid.Column>
               <Segment vertical>
                 <Header as="h1">React Task List</Header>
               </Segment>

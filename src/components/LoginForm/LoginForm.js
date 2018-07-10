@@ -1,10 +1,11 @@
 import React from "react";
 import { Button, Modal, Segment, Form, Message } from "semantic-ui-react";
 
-import fire from "firebase";
+import firebase from "firebase";
 
 export default class LoginForm extends React.Component {
   state = {
+    uid: "",
     email: "",
     password: "",
     warning: false,
@@ -27,33 +28,42 @@ export default class LoginForm extends React.Component {
       loading: true
     });
 
-    fire
+    firebase
       .auth()
       .signInWithEmailAndPassword(this.state.email, this.state.password)
       .then(user => {
-        console.log(user);
         this.props.handleValidLogin();
-        // set the warning message to false for the next loginButton push
+        // set the warning message and loading animation to false for the next loginButton push
         this.setState({
-          warning: false
+          warning: false,
+          loading: false,
+          dimmerActive: false
         });
         this.props.handleLoginClose();
-        // once we close, set the loading to false for the next loginButton push
-        this.setState({
-          loading: false
-        });
+        this.authListener();
       })
       .catch(error => {
         this.setState({
           warning: true,
-          loading: false
+          loading: false,
+          dimmerActive: false
         });
       });
   };
 
   authListener = () => {
-    fire.auth().onAuthStateChanged(user => {
-      user && this.props.handleValidLogin();
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        this.setState({
+          uid: user.uid,
+          email: user.email
+        });
+        const database = firebase.database();
+        database.ref("users/" + this.state.uid).set({
+          email: this.state.email
+        });
+        this.props.handleValidLogin();
+      }
     });
   };
 
@@ -106,6 +116,7 @@ export default class LoginForm extends React.Component {
                 header="Invalid Login"
                 content="Email or password is not recognized."
               />
+
               <Button color="teal" fluid size="large" type="submit">
                 Login
               </Button>

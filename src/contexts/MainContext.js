@@ -7,9 +7,7 @@ export class MainProvider extends React.Component {
     loggedIn: false,
     activeMenuItem: "",
     loginModal: false,
-    signUpModal: false,
-    username: "",
-    email: ""
+    signUpModal: false
   };
 
   /* send the following functions to the Provider so others modules can use them */

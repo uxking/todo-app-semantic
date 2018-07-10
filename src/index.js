@@ -6,8 +6,6 @@ import firebase from "firebase";
 
 import { MainProvider } from "./contexts/MainContext";
 
-import "./styles.css";
-
 const rootElement = document.getElementById("root");
 
 // Initialize Firebase
