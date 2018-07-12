@@ -8,13 +8,50 @@ import {
   Message
 } from "semantic-ui-react";
 
+import firebase from "firebase";
+
 export default class TaskList extends React.Component {
+  state = {
+    email: "",
+    uid: ""
+  };
+
+  authListener = () => {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        this.setState({
+          uid: user.uid,
+          email: user.email
+        });
+        // const database = firebase.database();
+        // database
+        //   .ref("todos/" + this.state.uid)
+        //   .set({
+        //     taskName: "go to gym",
+        //     status: "pending",
+        //     dueDate: "2018-07-30"
+        //   })
+        //   .catch(error => {
+        //     console.log(error);
+        //   });
+      }
+    });
+  };
+
+  componentDidMount = () => {
+    this.authListener();
+  };
+
   render() {
     const { loggedIn } = this.props;
+    const { email, uid } = this.state;
 
     const TaskTable = () => (
       <Container>
         <Segment>
+          <Segment vertical>
+            Account: {email} UID: {uid}
+          </Segment>
           <Header as="h2" textAlign="center">
             Tasks
           </Header>
@@ -24,7 +61,7 @@ export default class TaskList extends React.Component {
                 <Table.HeaderCell>Name</Table.HeaderCell>
                 <Table.HeaderCell>Status</Table.HeaderCell>
                 <Table.HeaderCell>Description</Table.HeaderCell>
-                <Table.HeaderCell>Modify</Table.HeaderCell>
+                <Table.HeaderCell textAlign="right">Modify</Table.HeaderCell>
               </Table.Row>
             </Table.Header>
 
@@ -36,26 +73,6 @@ export default class TaskList extends React.Component {
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
                   do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 </Table.Cell>
-                <Table.Cell textAlign="right">
-                  <Button icon="checkmark" />
-                  <Button icon="edit" color="blue" />
-                  <Button icon="trash" color="red" />
-                </Table.Cell>
-              </Table.Row>
-              <Table.Row>
-                <Table.Cell>Jamie</Table.Cell>
-                <Table.Cell>Approved</Table.Cell>
-                <Table.Cell>Shorter description</Table.Cell>
-                <Table.Cell textAlign="right">
-                  <Button icon="checkmark" />
-                  <Button icon="edit" color="blue" />
-                  <Button icon="trash" color="red" />
-                </Table.Cell>
-              </Table.Row>
-              <Table.Row>
-                <Table.Cell>Jill</Table.Cell>
-                <Table.Cell>Denied</Table.Cell>
-                <Table.Cell>Shorter description</Table.Cell>
                 <Table.Cell textAlign="right">
                   <Button icon="checkmark" />
                   <Button icon="edit" color="blue" />

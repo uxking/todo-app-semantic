@@ -24,11 +24,12 @@ export default class App extends React.Component {
   render() {
     const { loading } = this.state;
 
-    return (
+    return loading ? (
+      <Dimmer inverted active={loading}>
+        <Loader content="One second.  We're working on it..." />
+      </Dimmer>
+    ) : (
       <div>
-        <Dimmer active={loading}>
-          <Loader />
-        </Dimmer>
         <NavBar />
         <LoginForm />
         <SignUpForm />

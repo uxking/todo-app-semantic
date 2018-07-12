@@ -33,21 +33,18 @@ export default class NavBar extends React.Component {
             <Grid.Column>
               <Segment vertical textAlign="right">
                 {!loggedIn ? (
-                  <Button name="loginButton" onClick={handleMenuItemClick}>
-                    Login
+                  <Button
+                    color="teal"
+                    name="loginButton"
+                    onClick={handleMenuItemClick}
+                  >
+                    Login / Sign Up
                   </Button>
                 ) : (
                   <Button name="logOutButton" onClick={this.hanldeLogout}>
                     Log Out
                   </Button>
                 )}
-                <Button
-                  name="signUpButton"
-                  primary
-                  onClick={handleMenuItemClick}
-                >
-                  Sign Up
-                </Button>
               </Segment>
             </Grid.Column>
           </Grid.Row>
