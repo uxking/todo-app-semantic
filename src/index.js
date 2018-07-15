@@ -9,7 +9,17 @@ import { MainProvider } from "./contexts/MainContext";
 const rootElement = document.getElementById("root");
 
 // Initialize Firebase
-
+// Paste your firebase config in config.json
+// Format is:
+//
+// {
+//   "apiKey": "YOUR KEY",
+//   "authDomain": "YOUR DOMAIN",
+//   "databaseURL": "YOUR URL",
+//   "projectId": "YOUR PROJECT",
+//   "storageBucket": "YOUR BUCKET",
+//   "messagingSenderId": "YOUR ID"
+// }
 const config = require("./config.json");
 firebase.initializeApp(config);
 
