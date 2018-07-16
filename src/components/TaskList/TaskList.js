@@ -13,7 +13,8 @@ import {
   Modal,
   Form,
   Transition,
-  Image
+  Image,
+  Confirm
 } from "semantic-ui-react";
 
 import moment from "moment";
@@ -36,7 +37,8 @@ export default class TaskList extends React.Component {
     priorityError: false,
     taskName: "",
     taskNameError: false,
-    visible: false
+    visible: false,
+    confirmOpen: false
   };
 
   authListener = () => {
@@ -56,8 +58,15 @@ export default class TaskList extends React.Component {
         // END get todos code;
       } // end of if user
     }); // end of authstatechanged
-  }; //end of authListener
+  };
+  //end of authListener
 
+  openConfirm = () => {
+    this.setState({ confirmOpen: true });
+  };
+  closeConfirm = () => {
+    this.setState({ confirmOpen: false });
+  };
   addTodo = () => {
     // BEGIN add todo entry code
     const database = firebase.database();
@@ -71,26 +80,37 @@ export default class TaskList extends React.Component {
       })
       .then(() => {
         this.setState({
-          visible: true
+          visible: true,
+          taskName: "",
+          status: "",
+          dueDate: "None",
+          priority: null
         });
-        setTimeout(
-          () =>
-            this.setState({
-              visible: false,
-              taskName: "",
-              status: "",
-              dueDate: "None",
-              priority: null
-            }),
-          1000
-        ); // simulates an async action, and hides the spinner
+        setTimeout(() => this.setState({ visible: false }), 1000); // simulates an async action, and hides the spinner
       })
       .catch(error => {
         console.log(error);
       });
-    // END add todo entry code
   };
 
+  deleteTodo = taskElement => {
+    console.log("Delete pushed");
+    console.log(taskElement);
+    const database = firebase.database();
+    const deleteRef = database.ref(
+      "todos/" + this.state.uid + "/" + taskElement
+    );
+    deleteRef
+      .remove()
+      .then(() => {
+        this.setState({ confirmOpen: false });
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
+  // END add todo entry code
   componentDidMount = () => {
     this.authListener();
   };
@@ -232,7 +252,23 @@ export default class TaskList extends React.Component {
                           <Table.Cell collapsing textAlign="right">
                             <Button icon="checkmark" />
                             <Button icon="edit" color="blue" />
-                            <Button icon="trash" color="red" />
+                            <Button
+                              icon="trash"
+                              color="red"
+                              name="delete"
+                              onClick={this.openConfirm}
+                            />
+                            <Confirm
+                              size="tiny"
+                              header="Delete"
+                              open={this.state.confirmOpen}
+                              cancelButton="Nevermind"
+                              confirmButton="Do it"
+                              onCancel={this.closeConfirm}
+                              onConfirm={taskElement =>
+                                this.deleteTodo(element)
+                              }
+                            />
                           </Table.Cell>
                         </Table.Row>
                       );
@@ -327,7 +363,10 @@ export default class TaskList extends React.Component {
                               style={{ height: "20px", marginBottom: "24px" }}
                               textAlign="center"
                             >
-                              <Transition.Group animation="fade" duration={500}>
+                              <Transition.Group
+                                animation="fade down"
+                                duration={500}
+                              >
                                 {this.state.visible && (
                                   <React.Fragment>
                                     <Image
