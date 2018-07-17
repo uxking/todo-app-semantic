@@ -10,11 +10,15 @@ import {
   Icon,
   Dimmer,
   Loader,
-  Modal,
   Form,
   Transition,
   Image,
-  Confirm
+  Confirm,
+  Input,
+  Select,
+  Grid,
+  Divider,
+  Popup
 } from "semantic-ui-react";
 
 import moment from "moment";
@@ -22,7 +26,6 @@ import moment from "moment";
 import DayPickerInput from "react-day-picker/DayPickerInput";
 import "react-day-picker/lib/style.css";
 import firebase from "firebase";
-import circleCheckLogo from "./images/check-circle-solid.svg";
 
 export default class TaskList extends React.Component {
   state = {
@@ -51,6 +54,7 @@ export default class TaskList extends React.Component {
 
         // START get todos code
         const todosRef = firebase.database().ref("todos/" + this.state.uid);
+
         todosRef.on("value", snapshot => {
           this.setState({ todos: snapshot.val(), todosLoading: false });
         });
@@ -61,14 +65,8 @@ export default class TaskList extends React.Component {
   };
   //end of authListener
 
-  openConfirm = () => {
-    this.setState({ confirmOpen: true });
-  };
-  closeConfirm = () => {
-    this.setState({ confirmOpen: false });
-  };
+  // BEGIN add todo entry code
   addTodo = () => {
-    // BEGIN add todo entry code
     const database = firebase.database();
     const todoRef = database.ref("todos/" + this.state.uid);
     todoRef
@@ -92,7 +90,9 @@ export default class TaskList extends React.Component {
         console.log(error);
       });
   };
+  // END add todo entry code
 
+  // Begin delete todo entry
   deleteTodo = taskElement => {
     console.log("Delete pushed");
     console.log(taskElement);
@@ -109,8 +109,42 @@ export default class TaskList extends React.Component {
         console.log(error);
       });
   };
+  // END delete todo entry
 
-  // END add todo entry code
+  completeTodo = (taskElement, currentStatus) => {
+    const database = firebase.database();
+    const completeRef = database.ref(
+      "todos/" + this.state.uid + "/" + taskElement
+    );
+    console.log(taskElement);
+    console.log(currentStatus);
+    const newStatus = currentStatus === "Completed" ? "Pending" : "Completed";
+
+    completeRef
+      .update({ status: newStatus })
+      .then(() => {
+        console.log("todo completed");
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
+  editTodo = (
+    currentDueDate,
+    currentPriority,
+    currentStatus,
+    currentTaskName
+  ) => {
+    this.setState({
+      dueDate: currentDueDate,
+      priority: currentPriority,
+      status: currentStatus,
+      taskName: currentTaskName
+    });
+  };
+  // END of editTodo code
+
   componentDidMount = () => {
     this.authListener();
   };
@@ -120,6 +154,13 @@ export default class TaskList extends React.Component {
     this.setState({
       dueDate: submittedDate
     });
+  };
+
+  openConfirm = () => {
+    this.setState({ confirmOpen: true });
+  };
+  closeConfirm = () => {
+    this.setState({ confirmOpen: false });
   };
 
   openAddTodoModal = () => {
@@ -143,7 +184,6 @@ export default class TaskList extends React.Component {
     name === "status" && this.setState({ statusError: false });
     name === "taskName" && this.setState({ taskNameError: false });
 
-    console.log(name, value);
     this.setState({
       [name]: value
     });
@@ -166,7 +206,7 @@ export default class TaskList extends React.Component {
     const { loggedIn } = this.props;
     const { email, uid, todosLoading, todos } = this.state;
 
-    // arrays for the todo form select lists
+    // arrays for the todo form priority and select lists
     const addTodoFormPriorityOptions = [
       { key: "l", text: "Low", value: 3 },
       { key: "m", text: "Medium", value: 2 },
@@ -176,6 +216,7 @@ export default class TaskList extends React.Component {
       { key: "p", text: "Pending", value: "Pending" },
       { key: "c", text: "Completed", value: "Completed" }
     ];
+    // End arrays for the todo form priority and select lists
 
     // Module used in the input form as controll for dueDate field
     const DueDatePicker = () => (
@@ -222,11 +263,11 @@ export default class TaskList extends React.Component {
                 <Table celled compact>
                   <Table.Header>
                     <Table.Row>
-                      <Table.HeaderCell>Due Date</Table.HeaderCell>
+                      <Table.HeaderCell width="two">Due Date</Table.HeaderCell>
                       <Table.HeaderCell textAlign="center">
                         Priority
                       </Table.HeaderCell>
-                      <Table.HeaderCell textAlign="center">
+                      <Table.HeaderCell width="two" textAlign="center">
                         Status
                       </Table.HeaderCell>
                       <Table.HeaderCell>Description</Table.HeaderCell>
@@ -235,13 +276,33 @@ export default class TaskList extends React.Component {
                   </Table.Header>
 
                   <Table.Body>
+                    {/* We get an Object for todos so we have to map and pull out each "element" */}
                     {Object.keys(todos).map(element => {
+                      // Begin decorationStyle
+                      const decorationStyle = {
+                        textDecorationLine:
+                          todos[element].status === "Completed"
+                            ? "line-through"
+                            : "none",
+                        textDecorationColor: "#00b5ad",
+                        textDecorationStyle: "solid",
+                        color:
+                          todos[element].status === "Completed"
+                            ? "#00b5ad"
+                            : "#000",
+                        fontWeight:
+                          todos[element].status === "Completed" ? 100 : 600,
+                        backgroundColor:
+                          todos[element].status === "Completed"
+                            ? "#fffaf3"
+                            : "#fff"
+                      };
+                      // END of decorationStyle
                       return (
-                        <Table.Row key={element}>
+                        <Table.Row key={element} style={decorationStyle}>
                           <Table.Cell collapsing>
                             {todos[element].dueDate}
                           </Table.Cell>
-
                           <Table.Cell collapsing textAlign="center">
                             {todos[element].priority}
                           </Table.Cell>
@@ -250,316 +311,172 @@ export default class TaskList extends React.Component {
                           </Table.Cell>
                           <Table.Cell>{todos[element].taskName}</Table.Cell>
                           <Table.Cell collapsing textAlign="right">
-                            <Button icon="checkmark" />
-                            <Button icon="edit" color="blue" />
-                            <Button
-                              icon="trash"
-                              color="red"
-                              name="delete"
-                              onClick={this.openConfirm}
+                            <Popup
+                              trigger={
+                                <Button
+                                  icon="checkmark"
+                                  color={
+                                    todos[element].status === "Completed"
+                                      ? "teal"
+                                      : "grey"
+                                  }
+                                  onClick={(taskElement, currentStatus) =>
+                                    this.completeTodo(
+                                      element,
+                                      todos[element].status
+                                    )
+                                  }
+                                />
+                              }
+                              content={
+                                todos[element].status === "Completed"
+                                  ? "Undo Completed"
+                                  : "Mark Completed"
+                              }
                             />
+                            <Popup
+                              trigger={
+                                <Button
+                                  icon="edit"
+                                  name="edit"
+                                  color="blue"
+                                  onClick={(
+                                    currentDueDate,
+                                    currentPriority,
+                                    currentStatus,
+                                    currentTaskName
+                                  ) =>
+                                    this.editTodo(
+                                      todos[element].dueDate,
+                                      todos[element].priority,
+                                      todos[element].status,
+                                      todos[element].taskName
+                                    )
+                                  }
+                                />
+                              }
+                              content="Edit Todo"
+                            />
+                            <Popup
+                              trigger={
+                                <Button
+                                  icon="trash"
+                                  color="red"
+                                  name="delete"
+                                  onClick={this.openConfirm}
+                                />
+                              }
+                              content="Delete"
+                            />
+                            {/* confirm delete modal */}
                             <Confirm
                               size="tiny"
                               header="Delete"
+                              content="Are you sure you want to delete this To Do Item?"
                               open={this.state.confirmOpen}
                               cancelButton="Nevermind"
-                              confirmButton="Do it"
+                              confirmButton="Do it!"
                               onCancel={this.closeConfirm}
                               onConfirm={taskElement =>
                                 this.deleteTodo(element)
                               }
                             />
+                            {/* End confirm delete modal */}
                           </Table.Cell>
                         </Table.Row>
                       );
                     })}
+                    {/* End of Object.keys */}
                   </Table.Body>
-                  <Table.Footer fullWidth>
-                    <Table.Row>
-                      <Table.HeaderCell colSpan="5">
-                        <Modal
-                          closeIcon
-                          closeOnDimmerClick={false}
-                          open={this.state.modalOpen}
-                          onClose={this.closeAddTodoModal}
-                          trigger={
-                            <Button
-                              color="teal"
-                              circular
-                              icon="add"
-                              floated="right"
-                              style={{ marginRight: "20px" }}
-                              onClick={this.openAddTodoModal}
-                            />
-                          }
-                        >
-                          <Modal.Header>
-                            <Header icon="pencil" color="blue" />Add a ToDo
-                          </Modal.Header>
-                          <Modal.Content>
-                            <Modal.Description>
-                              Here you can add a new ToDo
-                            </Modal.Description>
-                            <Segment>
-                              <Form>
-                                <Form.Group>
-                                  <Form.Input
-                                    fluid
-                                    label="Due Date"
-                                    placeholder="Due Date"
-                                    width="3"
-                                    value={this.state.dueDate}
-                                    control={DueDatePicker}
-                                    name="dueDate"
-                                  />
-
-                                  <Form.Select
-                                    fluid
-                                    error={this.state.priorityError}
-                                    label="Priority"
-                                    placeholder="Priority"
-                                    name="priority"
-                                    value={this.state.priority}
-                                    options={addTodoFormPriorityOptions}
-                                    onChange={this.handleChange}
-                                    width="two"
-                                  />
-                                  <Form.Select
-                                    fluid
-                                    error={this.state.statusError}
-                                    label="Status"
-                                    placeholder="Status"
-                                    name="status"
-                                    value={this.state.status}
-                                    options={addTodoFormStatusOptions}
-                                    onChange={this.handleChange}
-                                    width="three"
-                                  />
-                                  <Form.Input
-                                    fluid
-                                    error={this.state.taskNameError}
-                                    label="Description"
-                                    placeholder="What do you need To Do?"
-                                    name="taskName"
-                                    value={this.state.taskName}
-                                    onChange={this.handleChange}
-                                    width="eight"
-                                  />
-
-                                  <Form.Button
-                                    color="teal"
-                                    icon="add"
-                                    labelPosition="right"
-                                    content="Add"
-                                    type="submit"
-                                    style={{ marginTop: "24px" }}
-                                    onClick={e => this.handleTodoSubmit(e)}
-                                  />
-                                </Form.Group>
-                              </Form>
-                            </Segment>
-                            <Segment
-                              vertical
-                              style={{ height: "20px", marginBottom: "24px" }}
-                              textAlign="center"
-                            >
-                              <Transition.Group
-                                animation="fade down"
-                                duration={500}
-                              >
-                                {this.state.visible && (
-                                  <React.Fragment>
-                                    <Image
-                                      style={{
-                                        marginTop: "-10px"
-                                      }}
-                                      centered
-                                      size="mini"
-                                      src={circleCheckLogo}
-                                      // name="check circle"
-                                      // size="large"
-                                      // color="teal"
-                                    />
-                                    <span>Todo Added!</span>
-                                  </React.Fragment>
-                                )}
-                              </Transition.Group>
-                            </Segment>
-                          </Modal.Content>
-                          <Modal.Actions>
-                            <Button
-                              onClick={this.closeAddTodoModal}
-                              style={{ marginRight: "20px" }}
-                            >
-                              <Icon name="cancel" /> Close
-                            </Button>
-                          </Modal.Actions>
-                        </Modal>
-                      </Table.HeaderCell>
-                    </Table.Row>
-                  </Table.Footer>
                 </Table>
               ) : (
-                <React.Fragment>
-                  <Message positive>
-                    <Message.Header>No Todos</Message.Header>
-                    <p>
-                      Looks like your all <b>caught up!</b>
-                    </p>
-                  </Message>
-                  <Table celled singleLine>
-                    <Table.Header>
-                      <Table.Row>
-                        <Table.HeaderCell>Due Date</Table.HeaderCell>
-                        <Table.HeaderCell>Priority</Table.HeaderCell>
-                        <Table.HeaderCell>Status</Table.HeaderCell>
-                        <Table.HeaderCell>Description</Table.HeaderCell>
-                        <Table.HeaderCell textAlign="right">
-                          Modify
-                        </Table.HeaderCell>
-                      </Table.Row>
-                    </Table.Header>
-
-                    <Table.Body>
-                      <Table.Row>
-                        <Table.Cell />
-                        <Table.Cell />
-                        <Table.Cell />
-                        <Table.Cell />
-                        <Table.Cell textAlign="right">
-                          <Button icon="checkmark" disabled />
-                          <Button icon="edit" color="blue" disabled />
-                          <Button icon="trash" color="red" disabled />
-                        </Table.Cell>
-                      </Table.Row>
-                    </Table.Body>
-                    <Table.Footer fullWidth>
-                      <Table.Row>
-                        <Table.HeaderCell colSpan="5">
-                          <Modal
-                            closeIcon
-                            closeOnDimmerClick={false}
-                            open={this.state.modalOpen}
-                            onClose={this.closeAddTodoModal}
-                            trigger={
-                              <Button
-                                color="teal"
-                                circular
-                                icon="add"
-                                floated="right"
-                                style={{ marginRight: "20px" }}
-                                onClick={this.openAddTodoModal}
-                              />
-                            }
-                          >
-                            <Modal.Header>
-                              <Header icon="pencil" color="blue" />Add a ToDo
-                            </Modal.Header>
-                            <Modal.Content>
-                              <Modal.Description>
-                                Here you can add a new ToDo
-                              </Modal.Description>
-                              <Segment>
-                                <Form>
-                                  <Form.Group>
-                                    <Form.Input
-                                      fluid
-                                      label="Due Date"
-                                      placeholder="Due Date"
-                                      width="3"
-                                      value={this.state.dueDate}
-                                      control={DueDatePicker}
-                                      name="dueDate"
-                                    />
-
-                                    <Form.Select
-                                      fluid
-                                      error={this.state.priorityError}
-                                      label="Priority"
-                                      placeholder="Priority"
-                                      name="priority"
-                                      value={this.state.priority}
-                                      options={addTodoFormPriorityOptions}
-                                      onChange={this.handleChange}
-                                      width="two"
-                                    />
-                                    <Form.Select
-                                      fluid
-                                      error={this.state.statusError}
-                                      label="Status"
-                                      placeholder="Status"
-                                      name="status"
-                                      value={this.state.status}
-                                      options={addTodoFormStatusOptions}
-                                      onChange={this.handleChange}
-                                      width="three"
-                                    />
-                                    <Form.Input
-                                      fluid
-                                      error={this.state.taskNameError}
-                                      label="Description"
-                                      placeholder="What do you need To Do?"
-                                      name="taskName"
-                                      value={this.state.taskName}
-                                      onChange={this.handleChange}
-                                      width="eight"
-                                    />
-
-                                    <Form.Button
-                                      color="teal"
-                                      icon="add"
-                                      labelPosition="right"
-                                      content="Add"
-                                      type="submit"
-                                      style={{ marginTop: "24px" }}
-                                      onClick={e => this.handleTodoSubmit(e)}
-                                    />
-                                  </Form.Group>
-                                </Form>
-                              </Segment>
-                              <Segment
-                                vertical
-                                style={{ height: "20px", marginBottom: "24px" }}
-                                textAlign="center"
-                              >
-                                <Transition.Group
-                                  animation="fade"
-                                  duration={500}
-                                >
-                                  {this.state.visible && (
-                                    <React.Fragment>
-                                      <Image
-                                        style={{
-                                          marginTop: "-10px"
-                                        }}
-                                        centered
-                                        size="mini"
-                                        src={circleCheckLogo}
-                                        // name="check circle"
-                                        // size="large"
-                                        // color="teal"
-                                      />
-                                      <span>Todo Added!</span>
-                                    </React.Fragment>
-                                  )}
-                                </Transition.Group>
-                              </Segment>
-                            </Modal.Content>
-                            <Modal.Actions>
-                              <Button
-                                onClick={this.closeAddTodoModal}
-                                style={{ marginRight: "20px" }}
-                              >
-                                <Icon name="cancel" /> Close
-                              </Button>
-                            </Modal.Actions>
-                          </Modal>
-                        </Table.HeaderCell>
-                      </Table.Row>
-                    </Table.Footer>
-                  </Table>
-                </React.Fragment>
+                <Message positive>
+                  <Message.Header>No Todos</Message.Header>
+                  <p>
+                    Looks like your all <b>caught up!</b>
+                  </p>
+                </Message>
               )}
+              {/* Add a form at the end of the table */}
+              <Divider />
+              <Form>
+                <Form.Group widths="equal">
+                  <Form.Field
+                    label="Due Date"
+                    placeholder="Due Date"
+                    value={this.state.dueDate}
+                    control={DueDatePicker}
+                    name="dueDate"
+                    width="three"
+                  />
+                  <Form.Field
+                    control={Select}
+                    error={this.state.priorityError}
+                    label="Priority"
+                    placeholder="Priority"
+                    name="priority"
+                    value={this.state.priority}
+                    options={addTodoFormPriorityOptions}
+                    onChange={this.handleChange}
+                    width="three"
+                  />
+                  <Form.Field
+                    control={Select}
+                    error={this.state.statusError}
+                    label="Status"
+                    placeholder="Status"
+                    name="status"
+                    value={this.state.status}
+                    options={addTodoFormStatusOptions}
+                    onChange={this.handleChange}
+                    width="three"
+                  />
+                  <Form.Field
+                    control={Input}
+                    error={this.state.taskNameError}
+                    label="Description"
+                    placeholder="What do you need To Do?"
+                    name="taskName"
+                    value={this.state.taskName}
+                    onChange={this.handleChange}
+                    width="eight"
+                  />
+                </Form.Group>
+                <Grid>
+                  <Grid.Column
+                    floated="right"
+                    textAlign="right"
+                    width="thirteen"
+                  >
+                    {/* Start of transition after adding todo */}
+                    <Transition.Group animation="vertical flip" duration={500}>
+                      {this.state.visible && (
+                        <Image floated="right">
+                          <Label
+                            content="Todo Added"
+                            color="teal"
+                            icon="circle check"
+                            size="large"
+                          />
+                        </Image>
+                      )}
+                    </Transition.Group>
+                    {/* End of transtion after adding todo */}
+                  </Grid.Column>
+                  <Grid.Column floated="right" width="two">
+                    <Form.Field
+                      floated="right"
+                      control={Button}
+                      color="teal"
+                      icon="add"
+                      labelPosition="right"
+                      content="Add"
+                      onClick={e => this.handleTodoSubmit(e)}
+                    />
+                  </Grid.Column>
+                </Grid>
+              </Form>
+              {/* End add a form at the end of the table */}
             </Segment>
           </Container>
         ) : (
