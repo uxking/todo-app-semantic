@@ -2,6 +2,12 @@
 
 (work in progress) Simple todo app using Firebase and SemanticUI.
 
+### TODO
+
+- [ ] Hamburger Menu Slideout
+  - [ ] Add menu itmes for Completed, Pending
+- [ ] Add ability to archive
+
 ### Dependencies
 
 `npm install semantic-ui-react moment react-day-picker firebase`
