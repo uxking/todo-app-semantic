@@ -1,6 +1,6 @@
 # React Todo App using Semantic UI and Firebase
 
-Simpel todo app using Firebase and SemanticUI.
+(work in progress) Simple todo app using Firebase and SemanticUI.
 
 ### Dependencies
 

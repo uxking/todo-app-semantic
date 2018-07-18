@@ -41,7 +41,9 @@ export default class TaskList extends React.Component {
     taskName: "",
     taskNameError: false,
     visible: false,
-    confirmOpen: false
+    confirmOpen: false,
+    editButtonsVisible: false,
+    element: {}
   };
 
   authListener = () => {
@@ -130,20 +132,70 @@ export default class TaskList extends React.Component {
       });
   };
 
+  handleSaveEditTodo = () => {
+    const database = firebase.database();
+    const saveEditRef = database.ref(
+      "todos/" + this.state.uid + "/" + this.state.element
+    );
+
+    saveEditRef
+      .update({
+        dueDate: this.state.dueDate,
+        priority: this.state.priority,
+        status: this.state.status,
+        taskName: this.state.taskName
+      })
+      .then(() => {
+        console.log("todo update completed");
+        this.setState({
+          dueDate: "None",
+          priority: null,
+          status: "",
+          taskName: "",
+          editButtonsVisible: false
+        });
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
+
+  // Executes when "edit" button in tableis pressed
   editTodo = (
+    currentElement,
     currentDueDate,
     currentPriority,
     currentStatus,
     currentTaskName
   ) => {
     this.setState({
+      element: currentElement,
       dueDate: currentDueDate,
       priority: currentPriority,
       status: currentStatus,
-      taskName: currentTaskName
+      taskName: currentTaskName,
+      editButtonsVisible: true,
+      priorityError: false,
+      statusError: false,
+      taskNameError: false
     });
   };
-  // END of editTodo code
+  // END "edit" in table button pressed
+
+  // Cancels the edit function
+  handleCancelEditPushed = () => {
+    this.setState({
+      dueDate: "Never",
+      priority: null,
+      status: "",
+      taskName: "",
+      editButtonsVisible: false,
+      priorityError: false,
+      statusError: false,
+      taskNameError: false
+    });
+  };
+  // END cancl edit function
 
   componentDidMount = () => {
     this.authListener();
@@ -341,12 +393,14 @@ export default class TaskList extends React.Component {
                                   name="edit"
                                   color="blue"
                                   onClick={(
+                                    currentElement,
                                     currentDueDate,
                                     currentPriority,
                                     currentStatus,
                                     currentTaskName
                                   ) =>
                                     this.editTodo(
+                                      element,
                                       todos[element].dueDate,
                                       todos[element].priority,
                                       todos[element].status,
@@ -443,37 +497,69 @@ export default class TaskList extends React.Component {
                   />
                 </Form.Group>
                 <Grid>
-                  <Grid.Column
-                    floated="right"
-                    textAlign="right"
-                    width="thirteen"
-                  >
-                    {/* Start of transition after adding todo */}
-                    <Transition.Group animation="vertical flip" duration={500}>
-                      {this.state.visible && (
-                        <Image floated="right">
-                          <Label
-                            content="Todo Added"
-                            color="teal"
-                            icon="circle check"
-                            size="large"
-                          />
-                        </Image>
-                      )}
-                    </Transition.Group>
-                    {/* End of transtion after adding todo */}
-                  </Grid.Column>
-                  <Grid.Column floated="right" width="two">
-                    <Form.Field
+                  <Grid.Row>
+                    <Grid.Column
                       floated="right"
-                      control={Button}
-                      color="teal"
-                      icon="add"
-                      labelPosition="right"
-                      content="Add"
-                      onClick={e => this.handleTodoSubmit(e)}
-                    />
-                  </Grid.Column>
+                      textAlign="right"
+                      width="twelve"
+                    >
+                      {/* Start of transition after adding todo */}
+                      <Transition.Group
+                        animation="vertical flip"
+                        duration={500}
+                      >
+                        {this.state.visible && (
+                          <Image floated="right">
+                            <Label
+                              content="Todo Added"
+                              color="teal"
+                              icon="circle check"
+                              size="large"
+                            />
+                          </Image>
+                        )}
+                      </Transition.Group>
+                      {/* End of transtion after adding todo */}
+                    </Grid.Column>
+                    {/* BEGIN show edit buttons */
+                    this.state.editButtonsVisible ? (
+                      <React.Fragment>
+                        <Grid.Column width="two">
+                          <Form.Field
+                            control={Button}
+                            color="teal"
+                            icon="save"
+                            name="editBtn"
+                            labelPosition="right"
+                            content="Save"
+                            onClick={this.handleSaveEditTodo}
+                          />
+                        </Grid.Column>
+                        <Grid.Column width="two" textAlign="right">
+                          <Form.Field
+                            icon="cancel"
+                            control={Button}
+                            name="cancelBtn"
+                            content="Cancel"
+                            onClick={this.handleCancelEditPushed}
+                          />
+                        </Grid.Column>
+                      </React.Fragment>
+                    ) : (
+                      <Grid.Column floated="right" width="two">
+                        <Form.Field
+                          floated="right"
+                          control={Button}
+                          color="teal"
+                          icon="add"
+                          name="addBtn"
+                          labelPosition="right"
+                          content="Add"
+                          onClick={e => this.handleTodoSubmit(e)}
+                        />
+                      </Grid.Column>
+                    )}
+                  </Grid.Row>
                 </Grid>
               </Form>
               {/* End add a form at the end of the table */}
