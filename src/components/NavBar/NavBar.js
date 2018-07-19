@@ -18,8 +18,8 @@ export default class NavBar extends React.Component {
             <Grid.Column>
               <Segment vertical>
                 <Button
-                  name="hamburgerbutton"
-                  icon="bars"
+                  name="homeButton"
+                  icon="home"
                   color="teal"
                   onClick={handleMenuItemClick}
                 />

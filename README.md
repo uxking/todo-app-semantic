@@ -1,12 +1,6 @@
 # React Todo App using Semantic UI and Firebase
 
-(work in progress) Simple todo app using Firebase and SemanticUI.
-
-### TODO
-
-- [ ] Hamburger Menu Slideout
-  - [ ] Add menu itmes for Completed, Pending
-- [ ] Add ability to archive
+Simple todo app using Firebase and SemanticUI.
 
 ### Dependencies
 

@@ -12,6 +12,7 @@ export class MainProvider extends React.Component {
 
   /* send the following functions to the Provider so others modules can use them */
   handleMenuItemClick = (e, { name }) => {
+    console.log(name);
     this.setState({ activeMenuItem: name });
     console.log("ActiveMenuItem is: " + name);
     switch (name) {

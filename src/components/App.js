@@ -2,9 +2,8 @@ import React from "react";
 import { Dimmer, Loader } from "semantic-ui-react";
 
 import NavBar from "../components/NavBar";
-import TaskList from "../components/TaskList";
 import LoginForm from "../components/LoginForm";
-import SignUpForm from "../components/SignUpForm";
+import TaskList from "../components/TaskList";
 
 export default class App extends React.Component {
   state = {
@@ -32,7 +31,6 @@ export default class App extends React.Component {
       <div>
         <NavBar />
         <LoginForm />
-        <SignUpForm />
         <TaskList />
       </div>
     );

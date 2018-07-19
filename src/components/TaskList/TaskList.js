@@ -18,7 +18,8 @@ import {
   Select,
   Grid,
   Divider,
-  Popup
+  Popup,
+  Statistic
 } from "semantic-ui-react";
 
 import moment from "moment";
@@ -43,6 +44,7 @@ export default class TaskList extends React.Component {
     visible: false,
     confirmOpen: false,
     editButtonsVisible: false,
+    todos: {},
     element: {}
   };
 
@@ -56,11 +58,13 @@ export default class TaskList extends React.Component {
 
         // START get todos code
         const todosRef = firebase.database().ref("todos/" + this.state.uid);
-
         todosRef.on("value", snapshot => {
-          this.setState({ todos: snapshot.val(), todosLoading: false });
+          this.setState({
+            todos: snapshot.val(),
+            todosLoading: false
+          });
         });
-        console.log(this.state.uid);
+
         // END get todos code;
       } // end of if user
     }); // end of authstatechanged
@@ -270,6 +274,8 @@ export default class TaskList extends React.Component {
     ];
     // End arrays for the todo form priority and select lists
 
+    let completedCount = 0;
+    let pendingCount = 0;
     // Module used in the input form as controll for dueDate field
     const DueDatePicker = () => (
       <DayPickerInput
@@ -349,6 +355,7 @@ export default class TaskList extends React.Component {
                             ? "#fffaf3"
                             : "#fff"
                       };
+
                       // END of decorationStyle
                       return (
                         <Table.Row key={element} style={decorationStyle}>
@@ -559,6 +566,65 @@ export default class TaskList extends React.Component {
                         />
                       </Grid.Column>
                     )}
+                  </Grid.Row>
+                  <Grid.Row>
+                    {todos &&
+                      Object.values(todos).map(key => {
+                        if (key.status === "Completed") {
+                          completedCount++;
+                        } else if (key.status === "Pending") {
+                          pendingCount++;
+                        }
+                        return false;
+                      })}
+
+                    <Grid.Column textAlign="center">
+                      <Divider horizontal>Statistics</Divider>
+                      <Statistic>
+                        <Statistic.Value>
+                          <Icon name="tasks" />
+                          <span style={{ padding: 8 }}>
+                            {todos ? Object.keys(todos).length : 0}
+                          </span>
+                        </Statistic.Value>
+                        <Statistic.Label>Total Todos</Statistic.Label>
+                      </Statistic>
+                      <Statistic>
+                        <Statistic.Value>
+                          <Icon name="tasks" />
+                          <span style={{ padding: 8 }}>{pendingCount}</span>
+                        </Statistic.Value>
+                        <Statistic.Label>Pending</Statistic.Label>
+                      </Statistic>
+                      <Statistic>
+                        <Statistic.Value>
+                          <Icon name="tasks" color="teal" />
+                          <span style={{ padding: 8, color: "#009c95" }}>
+                            {completedCount}
+                          </span>
+                        </Statistic.Value>
+                        <Statistic.Label style={{ color: "#009c95" }}>
+                          Completed
+                        </Statistic.Label>
+                      </Statistic>
+                    </Grid.Column>
+                  </Grid.Row>
+                  <Grid.Row>
+                    <Grid.Column>
+                      <Divider />
+                      <Message>
+                        <Message.Header>
+                          <Icon size="big" name="github" />
+                          This Code is on GitHub
+                        </Message.Header>
+                        <p>
+                          Visit:{" "}
+                          <a href="https://github.com/uxking/todo-app-semantic">
+                            https://github.com/uxking/todo-app-semantic
+                          </a>
+                        </p>
+                      </Message>
+                    </Grid.Column>
                   </Grid.Row>
                 </Grid>
               </Form>
